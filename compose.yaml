@@ -1,0 +1,46 @@
+# AguiNews con Docker Compose: base de datos, ápi y sitio en una sola "reserva de grupo".
+# Los secretos viven en .env (fuera del repositorio): copia .env.example a .env y cámbialos.
+name: aguinews-demo
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # Volumen: los datos sobreviven aunque se borre el contenedor (Postgres 17: /var/lib/postgresql/data).
+      - db-data:/var/lib/postgresql/data
+      # Crea las tablas la primera vez (script generado con las migraciones de EF Core).
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      # $$ evita que Compose reemplace la variable: la lee el contenedor.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ./AguiNews-codigo
+    environment:
+      # "db" es el nombre del servicio: Docker lo resuelve dentro de la red.
+      ConnectionStrings__AguiNews: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      AppConfig__ApiKey: ${AGUINEWS_API_KEY}
+    depends_on:
+      db:
+        # No basta con que exista: espera a que la base esté lista.
+        condition: service_healthy
+    ports:
+      # Solo desde esta computadora (127.0.0.1), nunca hacia afuera.
+      - "127.0.0.1:5180:8080"
+
+  web:
+    build: ./AguiNews-dashboard-codigo
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:8090:8080"
+
+volumes:
+  db-data:

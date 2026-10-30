@@ -1,0 +1,30 @@
+# Secretos: el .env nunca se sube (usa .env.example como plantilla)
+.env
+.env.*
+!.env.example
+secrets.json
+*.key
+*.pfx
+
+# Carpetas de los IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+# Archivos del sistema y logs
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# Compilados de .NET
+bin/
+obj/
+TestResults/
+
+# Dependencias y compilados de Angular / Node
+node_modules/
+dist/
+.angular/
+coverage/

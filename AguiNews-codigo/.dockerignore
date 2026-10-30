@@ -1,0 +1,12 @@
+# Lo que no debe viajar al build: compilados locales, secretos y metadatos.
+**/bin/
+**/obj/
+.env
+.env.*
+!.env.example
+.git/
+.vs/
+.vscode/
+*.user
+Dockerfile
+.dockerignore
